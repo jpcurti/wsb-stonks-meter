@@ -302,7 +302,8 @@ IPAddress dns2IP      = IPAddress(8, 8, 8, 8);
 
 #include <ESP_WiFiManager.h>              //https://github.com/khoih-prog/ESP_WiFiManager
 #include <Arduino.h>
-#include <StockPrinter.h>
+#include <StockDisplay.h>
+#include <ServoInterface.h>
 // Function Prototypes
 uint8_t connectMultiWiFi(void);
 
@@ -467,7 +468,8 @@ uint8_t connectMultiWiFi(void)
 }
 
 //Stock Display
-StockPrinter *display;
+StockDisplay *display;
+ServoInterface servo = ServoInterface();
 
 void setup()
 {
@@ -508,7 +510,8 @@ void setup()
   }
 
   unsigned long startedAt = millis();
-	display = new StockPrinter();
+	display = new StockDisplay();
+  //servo = new ServoInterface();
   //Local intialization. Once its business is done, there is no need to keep it around
   // Use this to default DHCP hostname to ESP8266-XXXXXX or ESP32-XXXXXX
   //ESP_WiFiManager ESP_wifiManager;
@@ -555,7 +558,7 @@ void setup()
   //Remove this line if you do not want to see WiFi password printed
   //Serial.println("Stored: SSID = " + Router_SSID + ", Pass = " + Router_Pass);
 	
-	display->updateDisplay("Connecting to network "+ Router_SSID);
+	display->printTextOnDisplay("Connecting to network "+ Router_SSID);
 
   // SSID to uppercase
   ssid.toUpperCase();
@@ -708,7 +711,7 @@ void loop()
     //Check if there is stored WiFi router/password credentials.
     //If not found, device will remain in configuration mode until switched off via webserver.
     Serial.print("Opening configuration portal. ");
-    display->updateDisplay("Opening configuration portal. ");
+    display->printTextOnDisplay("Opening configuration portal. ");
     Router_SSID = ESP_wifiManager.WiFi_SSID();
     Router_Pass = ESP_wifiManager.WiFi_Pass();
     
@@ -733,7 +736,7 @@ void loop()
       Serial.println("connected...");
       Serial.print("Local IP: ");
       Serial.println(WiFi.localIP());
-      display->updateDisplay("Connected to wifi");
+      display->printTextOnDisplay("Connected to wifi");
     }
 
     // Only clear then save data if CP entered and with new valid Credentials
@@ -774,6 +777,13 @@ void loop()
 
   // put your main code here, to run repeatedly
   check_status();
-  
+	display->printStockPriceOnDisplay("BB",5.75, 0.5, 10.2);
+  for (int aux=0; aux<100; aux++)
+  {
+  servo.updateServoOnPercentage(aux);
+  delay(50);
+  }
+ 
+
 
 }

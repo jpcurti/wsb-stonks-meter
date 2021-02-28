@@ -1,4 +1,4 @@
-#include <StockPrinter.h>
+#include <StockDisplay.h>
 
 const unsigned char WSB [] PROGMEM = {
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
@@ -66,41 +66,66 @@ const unsigned char WSB [] PROGMEM = {
 			0xff, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x00, 0x30, 0x30, 0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 
 			0xff, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x00, 0x30, 0x30, 0x00, 0x00, 0x00, 0x0f, 0xff, 0xff, 0xff};
 
-StockPrinter::StockPrinter(){
-	display = new Adafruit_SSD1306 (SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+StockDisplay::StockDisplay()  :m_display(SCREEN_WIDTH, SCREEN_HEIGHT){
 
   if(!Serial){
 		Serial.begin(9600);
 	} 
-  if(!display->begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+  if(!m_display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
   delay(1000);
-  display->clearDisplay();
+  m_display.clearDisplay();
 	drawWSB();
-	delay(5000);
+	if (DELAY_LOGO) delay(5000);
   
 }
+StockDisplay::~StockDisplay()
+{
+	
+}
 
-void StockPrinter::updateDisplay(String message)
+void StockDisplay::printTextOnDisplay(String message)
 {	
-	display->clearDisplay();
-	display->setTextSize(1);
-	display->setTextColor(WHITE);
-	display->setCursor(0, 10);
+	m_display.clearDisplay();
+	m_display.setTextSize(1);
+	m_display.setTextColor(WHITE);
+	m_display.setCursor(0, 10);
 	// Display static text
-	display->println(message.c_str());
-	display->display(); 
+	m_display.println(message.c_str());
+	m_display.display(); 
 
 
 }
 
-void StockPrinter::drawWSB()
+void StockDisplay::drawWSB()
 {
 	// Clear the buffer.
-	display->clearDisplay();
+	m_display.clearDisplay();
 	// Display bitmap
-	display->drawBitmap(0, 0,  WSB, 128, 64, WHITE);
-	display->display();
+	m_display.drawBitmap(0, 0,  WSB, 128, 64, WHITE);
+	m_display.display();
 }
+
+void StockDisplay::printStockPriceOnDisplay(String stockName, float value , float difference , float differenceInPercentage)
+{
+	// Clear the buffer.
+	m_display.clearDisplay();
+	// Display bitmap
+	m_display.setCursor(0,10);
+	m_display.setTextSize(2);
+	m_display.print(stockName.c_str());
+	m_display.print(" ");
+	m_display.write(36);
+	m_display.print(value,2);
+	m_display.setCursor(00,30);
+	m_display.setTextSize(1);
+	difference<0?m_display.write(46):m_display.write(43);
+	m_display.print(difference,2);
+	m_display.print(" (");
+	m_display.print(differenceInPercentage,2);
+	m_display.print("%)");
+	m_display.display();
+}
+
