@@ -1,4 +1,6 @@
 #include <StockDisplay.h>
+#define ARROW_UP 24
+#define ARROW_DOWN  25
 
 const unsigned char WSB[] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -113,19 +115,21 @@ void StockDisplay::printStockPriceOnDisplay(String stockName, float value, float
 	// Clear the buffer.
 	m_display.clearDisplay();
 	// Display bitmap
-	m_display.setCursor(0, 10);
+	m_display.setCursor(0, 5);
 	m_display.setTextSize(2);
 	m_display.setTextColor(WHITE);
 	m_display.print(stockName.c_str());
 	m_display.print(" ");
 	m_display.write(36);
 	m_display.print(value, 2);
-	m_display.setCursor(00, 30);
-	m_display.setTextSize(1);
-	difference < 0 ? m_display.write(46) : m_display.write(43);
+	m_display.setCursor(00, 25);
+	m_display.setTextSize(2);
+	if (difference > 0)  m_display.print("+");
 	m_display.print(difference, 2);
+	m_display.setCursor(00, 45);
 	m_display.print(" (");
 	m_display.print(differenceInPercentage, 2);
 	m_display.print("%)");
+	differenceInPercentage > 0 ? m_display.write(ARROW_UP) : m_display.write(ARROW_DOWN) ;
 	m_display.display();
 }

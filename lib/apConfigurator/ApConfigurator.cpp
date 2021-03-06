@@ -116,13 +116,15 @@ void ApConfigurator::heartBeatPrint(void)
 	}
 }
 
-void ApConfigurator::check_WiFi(void)
+uint8_t ApConfigurator::check_WiFi(void)
 {
 	if ((WiFi.status() != WL_CONNECTED))
 	{
 		Serial.println("\nWiFi lost. Call connectMultiWiFi in loop");
-		connectMultiWiFi();
+		return connectMultiWiFi();
 	}
+	return WL_CONNECTED;
+	
 }
 
 void ApConfigurator::check_status(void)
@@ -316,52 +318,8 @@ void ApConfigurator::setupApConfigurator(void)
 
 	if (initialConfig)
 	{
-		Serial.println("Starting configuration portal.");
-		digitalWrite(PIN_LED, LED_ON); // turn the LED on by making the voltage LOW to tell us we are in configuration mode.
-
-		//sets timeout in seconds until configuration portal gets turned off.
-		//If not specified device will remain in configuration mode until
-		//switched off via webserver or device is restarted.
-		//ESP_wifiManager.setConfigPortalTimeout(600);
-
-		// Starts an access point
-		if (!ESP_wifiManager.startConfigPortal((const char *)ssid.c_str(), password))
-			Serial.println("Not connected to WiFi but continuing anyway.");
-		else
-		{
-			Serial.println("WiFi connected...");
-		}
-
-		// Stored  for later usage, from v1.1.0, but clear first
-		memset(&WM_config, 0, sizeof(WM_config));
-
-		for (uint8_t i = 0; i < NUM_WIFI_CREDENTIALS; i++)
-		{
-			String tempSSID = ESP_wifiManager.getSSID(i);
-			String tempPW = ESP_wifiManager.getPW(i);
-
-			if (strlen(tempSSID.c_str()) < sizeof(WM_config.WiFi_Creds[i].wifi_ssid) - 1)
-				strcpy(WM_config.WiFi_Creds[i].wifi_ssid, tempSSID.c_str());
-			else
-				strncpy(WM_config.WiFi_Creds[i].wifi_ssid, tempSSID.c_str(), sizeof(WM_config.WiFi_Creds[i].wifi_ssid) - 1);
-
-			if (strlen(tempPW.c_str()) < sizeof(WM_config.WiFi_Creds[i].wifi_pw) - 1)
-				strcpy(WM_config.WiFi_Creds[i].wifi_pw, tempPW.c_str());
-			else
-				strncpy(WM_config.WiFi_Creds[i].wifi_pw, tempPW.c_str(), sizeof(WM_config.WiFi_Creds[i].wifi_pw) - 1);
-
-			// Don't permit NULL SSID and password len < MIN_AP_PASSWORD_SIZE (8)
-			if ((String(WM_config.WiFi_Creds[i].wifi_ssid) != "") && (strlen(WM_config.WiFi_Creds[i].wifi_pw) >= MIN_AP_PASSWORD_SIZE))
-			{
-				LOGERROR3(F("* Add SSID = "), WM_config.WiFi_Creds[i].wifi_ssid, F(", PW = "), WM_config.WiFi_Creds[i].wifi_pw);
-				wifiMulti.addAP(WM_config.WiFi_Creds[i].wifi_ssid, WM_config.WiFi_Creds[i].wifi_pw);
-			}
-		}
-
-		saveConfigData();
+		startConfigurationPortal();
 	}
-
-	digitalWrite(PIN_LED, LED_OFF); // Turn led off as we are not in configuration mode.
 
 	startedAt = millis();
 
@@ -408,11 +366,22 @@ void ApConfigurator::checkRequestConfigurationPortal(void)
 	// is configuration portal requested?
 	if ((digitalRead(TRIGGER_PIN) == LOW) || (digitalRead(TRIGGER_PIN2) == LOW))
 	{
-		Serial.println("\nConfiguration portal requested.");
+		startConfigurationPortal();
+	}
+}
+
+void ApConfigurator::startConfigurationPortal(void)
+{
+	Serial.println("\nConfiguration portal requested.");
 		digitalWrite(PIN_LED, LED_ON); // turn the LED on by making the voltage LOW to tell us we are in configuration mode.
 
 		//Local intialization. Once its business is done, there is no need to keep it around
 		ESP_WiFiManager ESP_wifiManager("ConfigOnSwitch");
+
+
+		CustomParameter myCustomParam{"FinnhubAPI_Label","Finnhub API Key","",48};
+		ESP_WMParameter p_thingspeakApiKey(myCustomParam.label, myCustomParam.placeholder, myCustomParam.defaultValue, myCustomParam.length);
+		ESP_wifiManager.addParameter(&p_thingspeakApiKey);
 
 		ESP_wifiManager.setMinimumSignalQuality(-1);
 
@@ -431,6 +400,9 @@ void ApConfigurator::checkRequestConfigurationPortal(void)
 		Serial.print("Opening configuration portal. ");
 		Router_SSID = ESP_wifiManager.WiFi_SSID();
 		Router_Pass = ESP_wifiManager.WiFi_Pass();
+
+
+
 
 		// From v1.1.0, Don't permit NULL password
 		if ((Router_SSID != "") && (Router_Pass != ""))
@@ -489,5 +461,5 @@ void ApConfigurator::checkRequestConfigurationPortal(void)
 		}
 
 		digitalWrite(PIN_LED, LED_OFF); // Turn led off as we are not in configuration mode.
-	}
+
 }
