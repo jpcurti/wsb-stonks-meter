@@ -1,31 +1,28 @@
 #ifndef APCONFIGURATOR_H
 #define APCONFIGURATOR_H
 #include <stdint.h>
-  struct CustomParameter
-  {
-    char *label;
-    char *placeholder;
-    char *defaultValue;
-    int length;
-  };
+#include <vector>
+
+
   class ApConfigurator
   {
   private:
+    void heartBeatPrint(void);
+    void loadConfigData(void);
+    void saveConfigData(void);
+    uint8_t connectMultiWiFi(void);
+    void startConfigurationPortal(void);
+    void setupApConfigurator(void);
     
-    static void heartBeatPrint(void);
-    
-    static void loadConfigData(void);
-    static void saveConfigData(void);
-    static uint8_t connectMultiWiFi(void);
-    static void startConfigurationPortal(void);
   public:
-    ApConfigurator(/* args */);
+    ApConfigurator();
     ~ApConfigurator();
-    static uint8_t check_WiFi(void);
-    static void check_status(void);
-    static void setupApConfigurator(void);
-    static void checkRequestConfigurationPortal(void);
-
+    uint8_t check_WiFi(void);
+    void check_status(void);
+    void checkRequestConfigurationPortal(void);
+    void begin();
+    const char* api_key();
+    const char* ticker();
   };
   
  

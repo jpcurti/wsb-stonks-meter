@@ -9,7 +9,7 @@
 #else
 #error This code is intended to run only on the ESP32 board ! Please check your Tools->Board setting.
 #endif
-
+#include <vector>
 // SSID and PW for Config Portal
 //String ssid = "stonks_" + String(ESP_getChipId(), HEX);
 //const char* password = "tothemoon";
@@ -38,12 +38,14 @@ typedef struct
 
 #define NUM_WIFI_CREDENTIALS 2
 
-typedef struct
-{
-	WiFi_Credentials WiFi_Creds[NUM_WIFI_CREDENTIALS];
-} WM_Config;
+#define API_LEN 48
+#define TICKER_LEN 6
 
-WM_Config WM_config;
+struct {
+	WiFi_Credentials WiFi_Creds[NUM_WIFI_CREDENTIALS];
+	char api_key[API_LEN];
+	char ticker_symbol[TICKER_LEN];
+} WM_config;
 
 #define CONFIG_FILENAME F("/wifi_cred.dat")
 //////
@@ -88,12 +90,19 @@ IPAddress netMask = IPAddress(255, 255, 255, 0);
 IPAddress dns1IP = gatewayIP;
 IPAddress dns2IP = IPAddress(8, 8, 8, 8);
 
-ApConfigurator::ApConfigurator(/* args */)
+ApConfigurator::ApConfigurator()
 {
 }
 
+
+
 ApConfigurator::~ApConfigurator()
 {
+}
+
+void ApConfigurator::begin()
+{
+	setupApConfigurator();
 }
 
 void ApConfigurator::heartBeatPrint(void)
@@ -168,7 +177,7 @@ void ApConfigurator::loadConfigData(void)
 	}
 }
 
-void ApConfigurator::saveConfigData(void)
+void ApConfigurator::saveConfigData()
 {
 	File file = FileFS.open(CONFIG_FILENAME, "w");
 	LOGERROR(F("SaveWiFiCfgFile "));
@@ -176,6 +185,7 @@ void ApConfigurator::saveConfigData(void)
 	if (file)
 	{
 		file.write((uint8_t *)&WM_config, sizeof(WM_config));
+		
 		file.close();
 		LOGERROR(F("OK"));
 	}
@@ -295,6 +305,8 @@ void ApConfigurator::setupApConfigurator(void)
 
 	//Remove this line if you do not want to see WiFi password printed
 	Serial.println("Stored: SSID = " + Router_SSID + ", Pass = " + Router_Pass);
+	String tempString = String("Stored Stock Information: Ticker Symbol = ") + WM_config.ticker_symbol + ", Pass = " + WM_config.api_key;
+	Serial.println(tempString);
 
 	// SSID to uppercase
 	ssid.toUpperCase();
@@ -327,6 +339,11 @@ void ApConfigurator::setupApConfigurator(void)
 	{
 		// Load stored data, the addAP ready for MultiWiFi reconnection
 		loadConfigData();
+		
+		Serial.print("Loaded from WM_Config - API: ");
+		Serial.print(WM_config.api_key);
+		Serial.print(" - Ticker: ");
+		Serial.println(WM_config.ticker_symbol);
 
 		for (uint8_t i = 0; i < NUM_WIFI_CREDENTIALS; i++)
 		{
@@ -377,11 +394,11 @@ void ApConfigurator::startConfigurationPortal(void)
 
 		//Local intialization. Once its business is done, there is no need to keep it around
 		ESP_WiFiManager ESP_wifiManager("ConfigOnSwitch");
-
-
-		CustomParameter myCustomParam{"FinnhubAPI_Label","Finnhub API Key","",48};
-		ESP_WMParameter p_thingspeakApiKey(myCustomParam.label, myCustomParam.placeholder, myCustomParam.defaultValue, myCustomParam.length);
-		ESP_wifiManager.addParameter(&p_thingspeakApiKey);
+		
+		ESP_WMParameter paramAPI("FinnhubAPI_Label","Finnhub API Key","", API_LEN);
+		ESP_WMParameter paramTicker("TickerSymbol_Label","Ticker Symbol","", TICKER_LEN);
+		ESP_wifiManager.addParameter(&paramAPI);
+		ESP_wifiManager.addParameter(&paramTicker);
 
 		ESP_wifiManager.setMinimumSignalQuality(-1);
 
@@ -457,9 +474,23 @@ void ApConfigurator::startConfigurationPortal(void)
 				}
 			}
 
+			strcpy(WM_config.api_key, paramAPI.getValue());
+			strcpy(WM_config.ticker_symbol, paramTicker.getValue());
+
+			Serial.print(WM_config.api_key);
+			Serial.print(WM_config.ticker_symbol);
+
 			saveConfigData();
 		}
 
 		digitalWrite(PIN_LED, LED_OFF); // Turn led off as we are not in configuration mode.
+}
+const char* ApConfigurator::api_key()
+{
+	return WM_config.api_key;
+}
 
+const char* ApConfigurator::ticker()
+{
+	return WM_config.ticker_symbol;
 }
