@@ -2,33 +2,40 @@
 
 ServoInterface::ServoInterface(/* args */)
 {
-    if(!servo.attached())
+   if(!servo.attached())
     {
         servo.attach(servo_pin);
     }
+    servo.write(90);
+    
+    servo.detach();
 }
 
 ServoInterface::~ServoInterface()
 {
-    if(servo.attached())
-    {
-        servo.detach();
-    }
+   
 }
 
-void ServoInterface::updateServoOnPercentage(int percentage)
-{
-
-    if(servo.attached())
-    {   
+void ServoInterface::updateServoOnPercentage(float percentage)
+{   
+    if(!servo.attached())
+    {
+        servo.attach(servo_pin);
+    }
         //  approximate sigmoid as in https://gitlab.com/prefrontalvortex/bit-tricks/blob/4f30cc2e998cd589fb2340e2c6deb07007a67141/sigmoid_hax.c
         //using approximate sigmoid
-        percentage = percentage * 1024/100;
-        servo.write(fastsig_i32(percentage)*180/1024);
-         
-       //direct conversion
-       //servo.write(percentage*180/100);
-    }
+        //percentage = percentage * 1024/100;
+       // servo.write(fastsig_i32(percentage)*180/1024);
+
+        //direct conversion
+        if(percentage > 100) servo.write(180);
+        else if (percentage < -100) servo.write(0);
+        else{
+            servo.write(percentage*0.9+90);
+        }
+       
+        
+        servo.detach();
 }
 
 int ServoInterface::fastsig_i32(int x) {

@@ -58,7 +58,7 @@ void checkWifiConnection()
 void updateStockValue()
 {
   stockAPI->requestStockCurrentPrice(String(apConfig.ticker()), String(apConfig.api_key()));
-  //servo->updateServoOnPercentage(aux);
+  servo->updateServoOnPercentage(stockAPI->getDifferenceInPrice()*100/stockAPI->getPreviousClosePrice());
 }
 void updateDisplay()
 { 

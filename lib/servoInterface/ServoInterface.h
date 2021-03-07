@@ -12,7 +12,7 @@ private:
 public:
     ServoInterface(/* args */);
     ~ServoInterface();
-    void updateServoOnPercentage(int percentage);
+    void updateServoOnPercentage(float percentage);
 };
 
 

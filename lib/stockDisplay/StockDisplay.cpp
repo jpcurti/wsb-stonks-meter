@@ -110,44 +110,44 @@ void StockDisplay::drawWSB()
 	m_display.display();
 }
 
-// void StockDisplay::printStockPriceOnDisplay(String stockName, float value, float difference, float differenceInPercentage)
-// {	
+void StockDisplay::printStockPriceOnDisplay(String stockName, float value, float difference, float differenceInPercentage)
+{	
 
-// 	if (!Serial)
-// 	{
-// 		Serial.begin(115200);
-// 	}
-// 	Serial.println("Printing on display:");
-// 	Serial.println(stockName);
-// 	Serial.println(value);
-// 	Serial.println(difference);
-// 	Serial.println(differenceInPercentage);
-// 	Serial.println("--------------");
+	if (!Serial)
+	{
+		Serial.begin(115200);
+	}
+	Serial.println("Printing on display:");
+	Serial.println(stockName);
+	Serial.println(value);
+	Serial.println(difference);
+	Serial.println(differenceInPercentage);
+	Serial.println("--------------");
 	
 
-// 	// Clear the buffer.
-// 	m_display.clearDisplay();
-// 	// Display bitmap
-// 	m_display.setCursor(0, 5);
-// 	m_display.setTextSize(2);
-// 	m_display.setTextColor(WHITE);
-// 	m_display.print(stockName.c_str());
-// 	m_display.print(" ");
-// 	m_display.write(36);
-// 	m_display.print(value, 2);
-// 	m_display.setCursor(00, 25);
-// 	m_display.setTextSize(2);
-// 	if (difference > 0)  m_display.write(PLUS_CHAR);
-// 	m_display.print(difference, 2);
-// 	m_display.setCursor(00, 45);
-// 	m_display.print(" (");
-// 	m_display.print(differenceInPercentage, 2);
-// 	m_display.print("%)");
-// 	differenceInPercentage > 0 ? m_display.write(ARROW_UP) : m_display.write(ARROW_DOWN) ;
-// 	m_display.display();
+	// Clear the buffer.
+	m_display.clearDisplay();
+	// Display bitmap
+	m_display.setCursor(0, 5);
+	m_display.setTextSize(2);
+	m_display.setTextColor(WHITE);
+	m_display.print(stockName.c_str());
+	m_display.print(" ");
+	m_display.write(36);
+	m_display.print(value, 2);
+	m_display.setCursor(00, 25);
+	m_display.setTextSize(2);
+	if (difference > 0)  m_display.write(PLUS_CHAR);
+	m_display.print(difference, 2);
+	m_display.setCursor(00, 45);
+	m_display.print(" (");
+	m_display.print(differenceInPercentage, 2);
+	m_display.print("%)");
+	differenceInPercentage > 0 ? m_display.write(ARROW_UP) : m_display.write(ARROW_DOWN) ;
+	m_display.display();
 	
 
-// }
+}
 
 void StockDisplay::printStockPriceOnDisplay(String stockName, String value)
 {	
