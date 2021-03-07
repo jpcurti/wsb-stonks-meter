@@ -23,7 +23,8 @@ String Router_Pass;
 #define SSID_MAX_LEN 32
 //From v1.0.10, WPA2 passwords can be up to 63 characters long.
 #define PASS_MAX_LEN 64
-
+#define API_MAX_LEN 32
+#define TICKER_MAX_LEN 6
 typedef struct
 {
 	char wifi_ssid[SSID_MAX_LEN];
@@ -38,14 +39,14 @@ typedef struct
 
 #define NUM_WIFI_CREDENTIALS 2
 
-#define API_LEN 48
-#define TICKER_LEN 6
 
-struct {
-	WiFi_Credentials WiFi_Creds[NUM_WIFI_CREDENTIALS];
-	char api_key[API_LEN];
-	char ticker_symbol[TICKER_LEN];
-} WM_config;
+typedef struct
+{
+  WiFi_Credentials  WiFi_Creds [NUM_WIFI_CREDENTIALS];
+  char api_key[API_MAX_LEN];
+  char ticker_symbol[TICKER_MAX_LEN];
+} WM_Config;
+WM_Config         WM_config;
 
 #define CONFIG_FILENAME F("/wifi_cred.dat")
 //////
@@ -94,8 +95,6 @@ ApConfigurator::ApConfigurator()
 {
 }
 
-
-
 ApConfigurator::~ApConfigurator()
 {
 }
@@ -133,7 +132,6 @@ uint8_t ApConfigurator::check_WiFi(void)
 		return connectMultiWiFi();
 	}
 	return WL_CONNECTED;
-	
 }
 
 void ApConfigurator::check_status(void)
@@ -185,7 +183,7 @@ void ApConfigurator::saveConfigData()
 	if (file)
 	{
 		file.write((uint8_t *)&WM_config, sizeof(WM_config));
-		
+
 		file.close();
 		LOGERROR(F("OK"));
 	}
@@ -305,8 +303,7 @@ void ApConfigurator::setupApConfigurator(void)
 
 	//Remove this line if you do not want to see WiFi password printed
 	Serial.println("Stored: SSID = " + Router_SSID + ", Pass = " + Router_Pass);
-	String tempString = String("Stored Stock Information: Ticker Symbol = ") + WM_config.ticker_symbol + ", Pass = " + WM_config.api_key;
-	Serial.println(tempString);
+
 
 	// SSID to uppercase
 	ssid.toUpperCase();
@@ -323,8 +320,6 @@ void ApConfigurator::setupApConfigurator(void)
 	else
 	{
 		Serial.println("Open Config Portal without Timeout: No stored Credentials.");
-		digitalWrite(PIN_LED, LED_ON); // Turn led on as we are in configuration mode.
-
 		initialConfig = true;
 	}
 
@@ -339,7 +334,7 @@ void ApConfigurator::setupApConfigurator(void)
 	{
 		// Load stored data, the addAP ready for MultiWiFi reconnection
 		loadConfigData();
-		
+
 		Serial.print("Loaded from WM_Config - API: ");
 		Serial.print(WM_config.api_key);
 		Serial.print(" - Ticker: ");
@@ -378,119 +373,120 @@ void ApConfigurator::setupApConfigurator(void)
 	}
 }
 
-void ApConfigurator::checkRequestConfigurationPortal(void)
+bool ApConfigurator::checkRequestConfigurationPortal(void)
 {
 	// is configuration portal requested?
 	if ((digitalRead(TRIGGER_PIN) == LOW) || (digitalRead(TRIGGER_PIN2) == LOW))
 	{
 		startConfigurationPortal();
+		return true;
 	}
+	return false;
 }
 
 void ApConfigurator::startConfigurationPortal(void)
 {
 	Serial.println("\nConfiguration portal requested.");
-		digitalWrite(PIN_LED, LED_ON); // turn the LED on by making the voltage LOW to tell us we are in configuration mode.
+	digitalWrite(PIN_LED, LED_ON); // turn the LED on by making the voltage LOW to tell us we are in configuration mode.
 
-		//Local intialization. Once its business is done, there is no need to keep it around
-		ESP_WiFiManager ESP_wifiManager("ConfigOnSwitch");
-		
-		ESP_WMParameter paramAPI("FinnhubAPI_Label","Finnhub API Key","", API_LEN);
-		ESP_WMParameter paramTicker("TickerSymbol_Label","Ticker Symbol","", TICKER_LEN);
-		ESP_wifiManager.addParameter(&paramAPI);
-		ESP_wifiManager.addParameter(&paramTicker);
+	//Local intialization. Once its business is done, there is no need to keep it around
+	ESP_WiFiManager ESP_wifiManager("ConfigOnSwitch");
+	
+	ESP_WMParameter paramAPI("FinnhubAPI_Label", "Finnhub API Key", WM_config.api_key, API_MAX_LEN);
+	ESP_WMParameter paramTicker("TickerSymbol_Label", "Ticker Symbol", WM_config.ticker_symbol, TICKER_MAX_LEN);
+	ESP_wifiManager.addParameter(&paramAPI);
+	ESP_wifiManager.addParameter(&paramTicker);
 
-		ESP_wifiManager.setMinimumSignalQuality(-1);
+	ESP_wifiManager.setMinimumSignalQuality(-1);
 
-		// From v1.0.10 only
-		// Set config portal channel, default = 1. Use 0 => random channel from 1-13
-		ESP_wifiManager.setConfigPortalChannel(0);
-		//////
+	// Set config portal channel, default = 1. Use 0 => random channel from 1-13
+	ESP_wifiManager.setConfigPortalChannel(0);
+	ESP_wifiManager.setCORSHeader("Your Access-Control-Allow-Origin");
 
-		//set custom ip for portal
-		//ESP_wifiManager.setAPStaticIPConfig(IPAddress(192, 168, 100, 1), IPAddress(192, 168, 100, 1), IPAddress(255, 255, 255, 0));
+	//Check if there is stored WiFi router/password credentials.
+	//If not found, device will remain in configuration mode until switched off via webserver.
+	Serial.print("Opening configuration portal. ");
+	Router_SSID = ESP_wifiManager.WiFi_SSID();
+	Router_Pass = ESP_wifiManager.WiFi_Pass();
 
-		ESP_wifiManager.setCORSHeader("Your Access-Control-Allow-Origin");
+	// From v1.1.0, Don't permit NULL password
+	if ((Router_SSID != "") && (Router_Pass != ""))
+	{
+		ESP_wifiManager.setConfigPortalTimeout(240); //If no access point name has been previously entered disable timeout.
+		Serial.println("Got stored Credentials. Timeout 240s");
+	}
+	else
+		Serial.println("No stored Credentials. No timeout");
 
-		//Check if there is stored WiFi router/password credentials.
-		//If not found, device will remain in configuration mode until switched off via webserver.
-		Serial.print("Opening configuration portal. ");
-		Router_SSID = ESP_wifiManager.WiFi_SSID();
-		Router_Pass = ESP_wifiManager.WiFi_Pass();
+	//Starts an access point
+	//and goes into a blocking loop awaiting configuration
+	if (!ESP_wifiManager.startConfigPortal((const char *)ssid.c_str(), password))
+	{
+		Serial.println("Not connected to WiFi but continuing anyway.");
+	}
+	else
+	{
+		//if you get here you have connected to the WiFi
+		Serial.println("connected...");
+		Serial.print("Local IP: ");
+		Serial.println(WiFi.localIP());
+	}
 
+	// Only clear then save data if CP entered and with new valid Credentials
+	// No CP => stored getSSID() = ""
+	if (String(ESP_wifiManager.getSSID(0)) != "" && String(ESP_wifiManager.getSSID(1)) != "")
+	{
+		// Stored  for later usage, from v1.1.0, but clear first
+		memset(&WM_config, 0, sizeof(WM_config));
 
-
-
-		// From v1.1.0, Don't permit NULL password
-		if ((Router_SSID != "") && (Router_Pass != ""))
+		for (uint8_t i = 0; i < NUM_WIFI_CREDENTIALS; i++)
 		{
-			ESP_wifiManager.setConfigPortalTimeout(120); //If no access point name has been previously entered disable timeout.
-			Serial.println("Got stored Credentials. Timeout 120s");
-		}
-		else
-			Serial.println("No stored Credentials. No timeout");
+			String tempSSID = ESP_wifiManager.getSSID(i);
+			String tempPW = ESP_wifiManager.getPW(i);
 
-		//Starts an access point
-		//and goes into a blocking loop awaiting configuration
-		if (!ESP_wifiManager.startConfigPortal((const char *)ssid.c_str(), password))
-		{
-			Serial.println("Not connected to WiFi but continuing anyway.");
-		}
-		else
-		{
-			//if you get here you have connected to the WiFi
-			Serial.println("connected...");
-			Serial.print("Local IP: ");
-			Serial.println(WiFi.localIP());
-		}
+			if (strlen(tempSSID.c_str()) < sizeof(WM_config.WiFi_Creds[i].wifi_ssid) - 1)
+				strcpy(WM_config.WiFi_Creds[i].wifi_ssid, tempSSID.c_str());
+			else
+				strncpy(WM_config.WiFi_Creds[i].wifi_ssid, tempSSID.c_str(), sizeof(WM_config.WiFi_Creds[i].wifi_ssid) - 1);
 
-		// Only clear then save data if CP entered and with new valid Credentials
-		// No CP => stored getSSID() = ""
-		if (String(ESP_wifiManager.getSSID(0)) != "" && String(ESP_wifiManager.getSSID(1)) != "")
-		{
-			// Stored  for later usage, from v1.1.0, but clear first
-			memset(&WM_config, 0, sizeof(WM_config));
+			if (strlen(tempPW.c_str()) < sizeof(WM_config.WiFi_Creds[i].wifi_pw) - 1)
+				strcpy(WM_config.WiFi_Creds[i].wifi_pw, tempPW.c_str());
+			else
+				strncpy(WM_config.WiFi_Creds[i].wifi_pw, tempPW.c_str(), sizeof(WM_config.WiFi_Creds[i].wifi_pw) - 1);
 
-			for (uint8_t i = 0; i < NUM_WIFI_CREDENTIALS; i++)
+			// Don't permit NULL SSID and password len < MIN_AP_PASSWORD_SIZE (8)
+			if ((String(WM_config.WiFi_Creds[i].wifi_ssid) != "") && (strlen(WM_config.WiFi_Creds[i].wifi_pw) >= MIN_AP_PASSWORD_SIZE))
 			{
-				String tempSSID = ESP_wifiManager.getSSID(i);
-				String tempPW = ESP_wifiManager.getPW(i);
-
-				if (strlen(tempSSID.c_str()) < sizeof(WM_config.WiFi_Creds[i].wifi_ssid) - 1)
-					strcpy(WM_config.WiFi_Creds[i].wifi_ssid, tempSSID.c_str());
-				else
-					strncpy(WM_config.WiFi_Creds[i].wifi_ssid, tempSSID.c_str(), sizeof(WM_config.WiFi_Creds[i].wifi_ssid) - 1);
-
-				if (strlen(tempPW.c_str()) < sizeof(WM_config.WiFi_Creds[i].wifi_pw) - 1)
-					strcpy(WM_config.WiFi_Creds[i].wifi_pw, tempPW.c_str());
-				else
-					strncpy(WM_config.WiFi_Creds[i].wifi_pw, tempPW.c_str(), sizeof(WM_config.WiFi_Creds[i].wifi_pw) - 1);
-
-				// Don't permit NULL SSID and password len < MIN_AP_PASSWORD_SIZE (8)
-				if ((String(WM_config.WiFi_Creds[i].wifi_ssid) != "") && (strlen(WM_config.WiFi_Creds[i].wifi_pw) >= MIN_AP_PASSWORD_SIZE))
-				{
-					LOGERROR3(F("* Add SSID = "), WM_config.WiFi_Creds[i].wifi_ssid, F(", PW = "), WM_config.WiFi_Creds[i].wifi_pw);
-					wifiMulti.addAP(WM_config.WiFi_Creds[i].wifi_ssid, WM_config.WiFi_Creds[i].wifi_pw);
-				}
+				LOGERROR3(F("* Add SSID = "), WM_config.WiFi_Creds[i].wifi_ssid, F(", PW = "), WM_config.WiFi_Creds[i].wifi_pw);
+				wifiMulti.addAP(WM_config.WiFi_Creds[i].wifi_ssid, WM_config.WiFi_Creds[i].wifi_pw);
 			}
-
-			strcpy(WM_config.api_key, paramAPI.getValue());
-			strcpy(WM_config.ticker_symbol, paramTicker.getValue());
-
-			Serial.print(WM_config.api_key);
-			Serial.print(WM_config.ticker_symbol);
-
-			saveConfigData();
 		}
 
-		digitalWrite(PIN_LED, LED_OFF); // Turn led off as we are not in configuration mode.
+		if (strlen(paramAPI.getValue()) < sizeof(WM_config.api_key) - 1)
+			strcpy(WM_config.api_key, paramAPI.getValue());
+		else
+			strncpy(WM_config.api_key, paramAPI.getValue(), sizeof(WM_config.api_key) - 1);
+		if (strlen(paramTicker.getValue()) < sizeof(WM_config.ticker_symbol) - 1)
+			strcpy(WM_config.ticker_symbol, paramTicker.getValue());
+		else
+			strncpy(WM_config.ticker_symbol, paramTicker.getValue(), sizeof(WM_config.ticker_symbol) - 1);
+		
+	
+
+		Serial.print(WM_config.api_key);
+		Serial.print(WM_config.ticker_symbol);
+
+		saveConfigData();
+	}
+
+	digitalWrite(PIN_LED, LED_OFF); // Turn led off as we are not in configuration mode.
 }
-const char* ApConfigurator::api_key()
-{
+const char *ApConfigurator::api_key()
+{	
 	return WM_config.api_key;
 }
 
-const char* ApConfigurator::ticker()
-{
+const char *ApConfigurator::ticker()
+{	
 	return WM_config.ticker_symbol;
 }

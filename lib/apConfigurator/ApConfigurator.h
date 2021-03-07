@@ -19,7 +19,7 @@
     ~ApConfigurator();
     uint8_t check_WiFi(void);
     void check_status(void);
-    void checkRequestConfigurationPortal(void);
+    bool checkRequestConfigurationPortal(void);
     void begin();
     const char* api_key();
     const char* ticker();

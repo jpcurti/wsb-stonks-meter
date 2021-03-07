@@ -20,7 +20,7 @@
 		void printTextOnDisplay(String message);
 		void drawWSB();
 		void printStockPriceOnDisplay(String stockName, float value, float difference , float differenceInPercentage);
-	
+		void printStockPriceOnDisplay(String stockName, String value);
 	};
 
 

@@ -1,7 +1,8 @@
 #include <StockDisplay.h>
 #define ARROW_UP 24
 #define ARROW_DOWN  25
-
+#define PLUS_CHAR  43
+#define MINUS_CHAR  45
 const unsigned char WSB[] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe0, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x01, 0x70, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -84,7 +85,6 @@ StockDisplay::StockDisplay() : m_display(SCREEN_WIDTH, SCREEN_HEIGHT)
 	delay(1000);
 	m_display.clearDisplay();
 	drawWSB();
-	
 }
 StockDisplay::~StockDisplay()
 {
@@ -110,26 +110,56 @@ void StockDisplay::drawWSB()
 	m_display.display();
 }
 
-void StockDisplay::printStockPriceOnDisplay(String stockName, float value, float difference, float differenceInPercentage)
-{
+// void StockDisplay::printStockPriceOnDisplay(String stockName, float value, float difference, float differenceInPercentage)
+// {	
+
+// 	if (!Serial)
+// 	{
+// 		Serial.begin(115200);
+// 	}
+// 	Serial.println("Printing on display:");
+// 	Serial.println(stockName);
+// 	Serial.println(value);
+// 	Serial.println(difference);
+// 	Serial.println(differenceInPercentage);
+// 	Serial.println("--------------");
+	
+
+// 	// Clear the buffer.
+// 	m_display.clearDisplay();
+// 	// Display bitmap
+// 	m_display.setCursor(0, 5);
+// 	m_display.setTextSize(2);
+// 	m_display.setTextColor(WHITE);
+// 	m_display.print(stockName.c_str());
+// 	m_display.print(" ");
+// 	m_display.write(36);
+// 	m_display.print(value, 2);
+// 	m_display.setCursor(00, 25);
+// 	m_display.setTextSize(2);
+// 	if (difference > 0)  m_display.write(PLUS_CHAR);
+// 	m_display.print(difference, 2);
+// 	m_display.setCursor(00, 45);
+// 	m_display.print(" (");
+// 	m_display.print(differenceInPercentage, 2);
+// 	m_display.print("%)");
+// 	differenceInPercentage > 0 ? m_display.write(ARROW_UP) : m_display.write(ARROW_DOWN) ;
+// 	m_display.display();
+	
+
+// }
+
+void StockDisplay::printStockPriceOnDisplay(String stockName, String value)
+{	
 	// Clear the buffer.
 	m_display.clearDisplay();
 	// Display bitmap
-	m_display.setCursor(0, 5);
+	m_display.setCursor(40, 5);
 	m_display.setTextSize(2);
 	m_display.setTextColor(WHITE);
 	m_display.print(stockName.c_str());
-	m_display.print(" ");
-	m_display.write(36);
-	m_display.print(value, 2);
-	m_display.setCursor(00, 25);
-	m_display.setTextSize(2);
-	if (difference > 0)  m_display.print("+");
-	m_display.print(difference, 2);
-	m_display.setCursor(00, 45);
-	m_display.print(" (");
-	m_display.print(differenceInPercentage, 2);
-	m_display.print("%)");
-	differenceInPercentage > 0 ? m_display.write(ARROW_UP) : m_display.write(ARROW_DOWN) ;
+	m_display.setCursor(30, 35);
+	m_display.print(value.c_str());
 	m_display.display();
+
 }

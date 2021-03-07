@@ -2,68 +2,89 @@
 #include <StockDisplay.h>
 #include <ServoInterface.h>
 #include <ApConfigurator.h>
-#include <WiFiClientSecureBearSSL.h>
-#include <ArduinoJson.h>
-#include <ESP8266HTTPClient.h>
-#include <vector>
-#include <string>
+#include <finnhubAPIInterface.h>
+#include <Ticker.h>
 
-//Stock Display
+
 StockDisplay *display;
 ServoInterface *servo;
-DynamicJsonDocument doc(1024);
-float previous_close_price;
-float current_price;
 ApConfigurator apConfig;
+finnhubAPIInterface *stockAPI;
+
+void updateStockValue();
+void checkWifiConnection();
+void checkInterruptButtonPress();
+void updateDisplay();
+int count=0;
+
+
+Ticker timer1(updateStockValue, 60000, 0, MILLIS);
+Ticker timer2(checkWifiConnection, 5000, 0, MILLIS);
+Ticker timer3(checkInterruptButtonPress, 100, 0, MILLIS);
+Ticker timer4(updateDisplay, 2000, 0, MILLIS);
 void setup()
 {
   display = new StockDisplay();
   servo = new ServoInterface();
   apConfig.begin();
+  stockAPI = new finnhubAPIInterface( );
+  updateStockValue();
+  timer1.start();
+  timer2.start();
+  timer3.start();
+  timer4.start();
 }
 void loop()
 { 
-  apConfig.checkRequestConfigurationPortal();
-  apConfig.check_status();
-  delay(1000);
-  String  httpRequest = String("https://finnhub.io/api/v1/quote?symbol=")+ apConfig.ticker() +"&token="+ apConfig.api_key();
-  if (apConfig.check_WiFi() == 3)//Check WiFi connection status
-  { 
-    BearSSL::WiFiClientSecure client;
-    HTTPClient http; //Declare an object of class HTTPClient
-    client.setInsecure();
-    http.begin(client,httpRequest); //Specify request destination
-    int httpCode = http.GET();                                 //Send the request
-
-    if (httpCode > 0)
-    { //Check the returning code
-
-      String payload = http.getString(); //Get the request response payload
-      Serial.println(payload);           //Print the response payload
-      deserializeJson(doc, payload);
-      JsonObject obj = doc.as<JsonObject>();
-
-      // You can use a String to get an element of a JsonObject
-      // No duplication is done.
-       previous_close_price = obj[String("pc")];
-       current_price = obj[String("c")];
-    }
-
-    http.end(); //Close connection
-  }
-  float difference = current_price-previous_close_price;
-  display->printStockPriceOnDisplay("BB", current_price, difference, difference*100/previous_close_price);
-  delay(60000);
-
-  /*
-  for (int aux=0; aux<100; aux++)
-  {
-  servo->updateServoOnPercentage(aux);
-  delay(50);
-  }
-  */
-}
  
+  timer1.update();
+  timer2.update();
+  timer3.update();
+  timer4.update();
+}
+
+void checkInterruptButtonPress()
+{
+   //Verifies if configuration Portal was requested. If it was, update immediatly the value on screen
+  if(apConfig.checkRequestConfigurationPortal())
+  {
+    updateStockValue();
+  } 
+}
+void checkWifiConnection()
+{
+  apConfig.check_WiFi();
+}
+void updateStockValue()
+{
+  stockAPI->requestStockCurrentPrice(String(apConfig.ticker()), String(apConfig.api_key()));
+  //servo->updateServoOnPercentage(aux);
+}
+void updateDisplay()
+{ 
+  String value;
+  switch (count%3)
+  {
+  case 0:
+    value=String()+"$"+stockAPI->getCurrentPrice();
+    break;
+  case 1:
+    if(stockAPI->getDifferenceInPrice()>0) value=String()+"+"+stockAPI->getDifferenceInPrice();
+    else value=String()+stockAPI->getDifferenceInPrice();
+    break;
+  case 2:
+    //display percentage
+    if(stockAPI->getDifferenceInPrice()>0) value= String()+"+"+stockAPI->getDifferenceInPrice()*100/stockAPI->getPreviousClosePrice()+"%";
+    else value= String()+stockAPI->getDifferenceInPrice()*100/stockAPI->getPreviousClosePrice()+"%";
+    break;
+  default:
+    break;
+  }
+  display->printStockPriceOnDisplay(String(apConfig.ticker()), value);
+  count++;
+  //display->printStockPriceOnDisplay(String(apConfig.ticker()), stockAPI->getCurrentPrice(), stockAPI->getDifferenceInPrice(), stockAPI->getDifferenceInPrice()*100/stockAPI->getPreviousClosePrice());
+}
+
 
 
   
