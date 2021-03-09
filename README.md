@@ -25,6 +25,9 @@ After this, the ESP will make the request to the finnhub API and fetch, every mi
 
 ## How to build, run and assembly.
 
+###### Housing (3D-Printer Files)
+Located on the [Thingiverse page](https://www.thingiverse.com/thing:4756562).
+
 
 ## Tech/framework used
 <b>Built with</b>
