@@ -1,7 +1,5 @@
 #include <ApConfigurator.h>
 
-#define USING_CORS_FEATURE true
-#include <ESP_WiFiManager.h> //https://github.com/khoih-prog/ESP_WiFiManager
 #if (defined(ESP32))
 #include <apConfigurator_ESP32.h>
 #elif (defined(ESP8266))
@@ -59,7 +57,7 @@ WM_Config         WM_config;
 // From v1.0.10 to permit disable/enable StaticIP configuration in Config Portal from sketch. Valid only if DHCP is used.
 // You'll loose the feature of dynamically changing from DHCP to static IP, or vice versa
 // You have to explicitly specify false to disable the feature.
-//#define USE_STATIC_IP_CONFIG_IN_CP          false
+#define USE_STATIC_IP_CONFIG_IN_CP          false
 
 // Use false to disable NTP config. Advisable when using Cellphone, Tablet to access Config Portal.
 // See Issue 23: On Android phone ConfigPortal is unresponsive (https://github.com/khoih-prog/ESP_WiFiManager/issues/23)
@@ -70,10 +68,14 @@ WM_Config         WM_config;
 #define USE_CLOUDFLARE_NTP false
 
 #define USE_DHCP_IP true
+#define USING_CORS_FEATURE true
 
 #define WIFICHECK_INTERVAL 1000L
 #define HEARTBEAT_INTERVAL 10000L
 #define WIFI_MULTI_CONNECT_WAITING_MS 100L
+
+
+#include <ESP_WiFiManager.h> //https://github.com/khoih-prog/ESP_WiFiManager
 
 // SSID and PW for Config Portal
 String ssid = "stonks_" + String(ESP_getChipId(), HEX);
@@ -393,7 +395,13 @@ void ApConfigurator::startConfigurationPortal(void)
 	ESP_WiFiManager ESP_wifiManager("ConfigOnSwitch");
 	
 	ESP_WMParameter paramAPI("FinnhubAPI_Label", "Finnhub API Key", WM_config.api_key, API_MAX_LEN);
-	ESP_WMParameter paramTicker("TickerSymbol_Label", "Ticker Symbol", WM_config.ticker_symbol, TICKER_MAX_LEN);
+	ESP_WMParameter paramTicker("TickerSymbol_Label", "Ticker Symbol e.g GME", WM_config.ticker_symbol, TICKER_MAX_LEN);
+	ESP_WMParameter p_hint("<small>*Hint: if you want to reuse the currently active WiFi credentials, leave SSID and Password fields empty</small>");
+	
+
+    //add all parameters here
+
+    ESP_wifiManager.addParameter(&p_hint);
 	ESP_wifiManager.addParameter(&paramAPI);
 	ESP_wifiManager.addParameter(&paramTicker);
 
