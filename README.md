@@ -31,10 +31,16 @@ After this, the ESP will make the request to the finnhub API and fetch, every mi
   - A 9g Micro Servo. I used a [generic servo from Aliexpress](https://de.aliexpress.com/item/1005001500679701.html?spm=a2g0s.9042311.0.0.39204c4dSB1oh6)
   - A 3d Printer for the [housing](https://www.thingiverse.com/thing:4793831) or just use any 3D print service.
   - Some wire jumpers or some wire to solder.
- 
-###### Housing (3D-Printer Files)
-Located on the [Thingiverse page](https://www.thingiverse.com/thing:4793831).
 
+###### Housing (3D-Printer Files)
+Located on the [Thingiverse page](https://www.thingiverse.com/thing:4793831). Follow the recommended printing settings as listed on thingiverse.
+
+###### Wiring & assembly
+If you are using the same board as the example, just follow this diagram. If possible or in case your servo uses 5V as input, change the voltage input to the VIN pin of your board. It is not recommended to supply the motor with the 3v3 output from the board but it should work fine.
+<a href="Assembly diagram example for a lolin board"><img src="images/diagram_esp_lolin_v3.png" align="center"  width="300" ></a>
+
+If you are using the wemos board, your connections should look like this:
+<a href="Assembly diagram example for a Wemos board"><img src="images/diagram_esp_wemos_d1.png" align="center"  width="300" ></a>
 
 ## Tech/framework used
 <b>Built with</b>
