@@ -29,11 +29,11 @@ After this, the ESP will make the request to the finnhub API and fetch, every mi
   - [An ESP8266 / ESP 32 board](https://www.espressif.com/en/products/devkits). I used a **NodeMCU Lolin V3** but the case was designed for a [**WEMOS D1**](https://de.aliexpress.com/item/32681374223.html?spm=a2g0s.9042311.0.0.27424c4dkVELIS)
   - A generic OLED 0.96" 128x64 Display based on the chip SSD1306. I used a [generic display from aliexpress](https://de.aliexpress.com/item/32639731302.html?spm=a2g0s.9042311.0.0.27424c4dvVaQDI).
   - A 9g Micro Servo. I used a [generic servo from Aliexpress](https://de.aliexpress.com/item/1005001500679701.html?spm=a2g0s.9042311.0.0.39204c4dSB1oh6)
-  - A 3d Printer for the [housing](https://www.thingiverse.com/thing:4756562) or just use any 3D print service.
+  - A 3d Printer for the [housing](https://www.thingiverse.com/thing:4793831) or just use any 3D print service.
   - Some wire jumpers or some wire to solder.
  
 ###### Housing (3D-Printer Files)
-Located on the [Thingiverse page](https://www.thingiverse.com/thing:4756562).
+Located on the [Thingiverse page](https://www.thingiverse.com/thing:4793831).
 
 
 ## Tech/framework used
@@ -46,6 +46,5 @@ Original idea from [this reddit post](https://www.reddit.com/r/wallstreetbets/co
 
 
 ## License
-A short snippet describing the license (MIT, Apache etc)
 
 GPL-3.0 License © [JpCurti](https://github.com/jpcurti)
