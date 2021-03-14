@@ -12,12 +12,12 @@ In the first boot if no password was stored (Or if you press the secondary/flash
 
 <a href="Access point created by the ESP"><img src="images/access_point.jpeg" align="center"  width="300" ></a>
 
-
 After connecting to it, a configuration portal should open.
 
 <a href="Initial page from config portal"><img src="images/configuration_portal_1.jpeg" align="center"  width="300" ></a>
 
 Then, select your wifi network(s) and insert the password(s), your personal finnhub API key and the [ticker symbol](https://en.wikipedia.org/wiki/Ticker_symbol).
+
 
 <a href="Configuration portal"><img src="images/configuration_portal_2.jpeg" align="center"  width="300" ></a>
 
@@ -37,10 +37,12 @@ Located on the [Thingiverse page](https://www.thingiverse.com/thing:4793831). Fo
 
 ###### Wiring & assembly
 If you are using the same board as the example, just follow this diagram. If possible or in case your servo uses 5V as input, change the voltage input to the VIN pin of your board. It is not recommended to supply the motor with the 3v3 output from the board but it should work fine.
-<a href="Assembly diagram example for a lolin board"><img src="images/diagram_esp_lolin_v3.png" align="center"  width="300" ></a>
+
+<a href="Assembly diagram example for a lolin board"><img src="images/diagram_esp_lolin_v3.png" align="center"  width="400" ></a>
 
 If you are using the wemos board, your connections should look like this:
-<a href="Assembly diagram example for a Wemos board"><img src="images/diagram_esp_wemos_d1.png" align="center"  width="300" ></a>
+
+<a href="Assembly diagram example for a Wemos board"><img src="images/diagram_esp_wemos_d1.png" align="center"  width="400" ></a>
 
 ## Tech/framework used
 <b>Built with</b>
